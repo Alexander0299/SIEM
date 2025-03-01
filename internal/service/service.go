@@ -2,18 +2,16 @@ package service
 
 import (
 	"siem-system/internal/model"
-	"siem-system/internal/repository"
 	"time"
 )
 
-func GenerateAndSendData() {
-	for {
-		alert := model.Alert{Message: "Security alert detected!"}
-		log := model.Log{Content: "User logged in"}
-
-		repository.StoreEntity(alert)
-		repository.StoreEntity(log)
-
-		time.Sleep(5 * time.Second)
-	}
+func GenerateData(logCh chan model.Log, userCh chan model.User, alertCh chan model.Alert) {
+	go func() {
+		for {
+			logCh <- model.Log{Content: "Новый лог"}
+			userCh <- model.User{Name: "Александр"}
+			alertCh <- model.Alert{Message: "Обнаружена угроза"}
+			time.Sleep(1 * time.Second)
+		}
+	}()
 }
