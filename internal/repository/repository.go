@@ -1,22 +1,19 @@
 package repository
 
-import (
-	"fmt"
-	"siem-system/internal/model"
-)
+import "siem-system/internal/model"
 
-var alerts []model.Alert
-var logs []model.Log
+var Logs []model.Log
+var Users []model.User
+var Alerts []model.Alert
 
-func StoreEntity(e model.Entity) {
-	switch v := e.(type) {
-	case model.Alert:
-		alerts = append(alerts, v)
-		fmt.Println("New alert stored:", v.Message)
-	case model.Log:
-		logs = append(logs, v)
-		fmt.Println("New log stored:", v.Content)
-	default:
-		fmt.Println("Unknown type received")
-	}
+func SaveLog(log model.Log) {
+	Logs = append(Logs, log)
+}
+
+func SaveUser(user model.User) {
+	Users = append(Users, user)
+}
+
+func SaveAlert(alert model.Alert) {
+	Alerts = append(Alerts, alert)
 }
