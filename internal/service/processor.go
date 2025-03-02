@@ -3,24 +3,38 @@ package service
 import (
 	"fmt"
 	"siem-system/internal/model"
+	"sync"
 )
 
-func ProcessData(logCh chan model.Log, userCh chan model.User, alertCh chan model.Alert) {
-	go func() {
-		for log := range logCh {
-			fmt.Println("Обработан лог:", log.Content)
-		}
-	}()
+var (
+	logs   []model.Log
+	users  []model.User
+	alerts []model.Alert
+)
 
-	go func() {
-		for user := range userCh {
-			fmt.Println("Обработан пользователь:", user.Name)
-		}
-	}()
+func ProcessLogs(logCh <-chan model.Log, mutex *sync.Mutex) {
+	for log := range logCh {
+		mutex.Lock()
+		logs = append(logs, log)
+		mutex.Unlock()
+		fmt.Println("Обработан лог:", log.Message)
+	}
+}
 
-	go func() {
-		for alert := range alertCh {
-			fmt.Println("Обработано предупреждение:", alert.Message)
-		}
-	}()
+func ProcessUsers(userCh <-chan model.User, mutex *sync.Mutex) {
+	for user := range userCh {
+		mutex.Lock()
+		users = append(users, user)
+		mutex.Unlock()
+		fmt.Println("Обработан пользователь:", user.Username)
+	}
+}
+
+func ProcessAlerts(alertCh <-chan model.Alert, mutex *sync.Mutex) {
+	for alert := range alertCh {
+		mutex.Lock()
+		alerts = append(alerts, alert)
+		mutex.Unlock()
+		fmt.Println("Обработано предупреждение:", alert.Details)
+	}
 }
