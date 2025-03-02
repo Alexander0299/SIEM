@@ -1,13 +1,21 @@
 package model
 
+import "time"
+
 type Log struct {
-	Content string
+	ID        int
+	Message   string
+	Timestamp time.Time
 }
 
 type User struct {
-	Name string
+	ID       int
+	Username string
+	Email    string
 }
 
 type Alert struct {
-	Message string
+	ID      int
+	Level   string
+	Details string
 }
