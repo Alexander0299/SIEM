@@ -1,30 +1,37 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"os/signal"
 	"siem-system/internal/model"
 	"siem-system/internal/service"
-	"sync"
+	"syscall"
 	"time"
 )
 
 func main() {
 
-	logCh := make(chan model.Log, 10)
-	userCh := make(chan model.User, 10)
-	alertCh := make(chan model.Alert, 10)
+	ctx, cancel := context.WithCancel(context.Background())
 
-	var logMutex, userMutex, alertMutex sync.Mutex
+	logCh := make(chan model.Log)
+	userCh := make(chan model.User)
+	alertCh := make(chan model.Alert)
 
-	go service.ProcessLogs(logCh, &logMutex)
-	go service.ProcessUsers(userCh, &userMutex)
-	go service.ProcessAlerts(alertCh, &alertMutex)
+	go service.ProcessData(ctx, logCh, userCh, alertCh)
 
-	go service.LogChanges(&logMutex, &userMutex, &alertMutex)
+	go service.GenerateData(ctx, logCh, userCh, alertCh)
 
-	go service.GenerateData(logCh, userCh, alertCh)
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 
-	time.Sleep(10 * time.Second)
+	<-sigCh
+	fmt.Println("\nПолучен сигнал завершения, останавливаем программу...")
 
-	fmt.Println("Программа завершила работу")
+	cancel()
+
+	time.Sleep(1 * time.Second)
+
+	fmt.Println("Программа завершена.")
 }
