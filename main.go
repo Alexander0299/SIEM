@@ -1,30 +1,31 @@
 package main
 
 import (
-	"fmt"
+	"os"
+	"os/signal"
 	"siem-system/internal/model"
+	"siem-system/internal/repository"
 	"siem-system/internal/service"
-	"sync"
-	"time"
+	"syscall"
 )
 
 func main() {
-
-	logCh := make(chan model.Log, 10)
-	userCh := make(chan model.User, 10)
-	alertCh := make(chan model.Alert, 10)
-
-	var logMutex, userMutex, alertMutex sync.Mutex
-
-	go service.ProcessLogs(logCh, &logMutex)
-	go service.ProcessUsers(userCh, &userMutex)
-	go service.ProcessAlerts(alertCh, &alertMutex)
-
-	go service.LogChanges(&logMutex, &userMutex, &alertMutex)
+	logCh := make(chan model.Log)
+	userCh := make(chan model.User)
+	alertCh := make(chan model.Alert)
 
 	go service.GenerateData(logCh, userCh, alertCh)
+	go repository.ProcessLogs(logCh)
+	go repository.ProcessUsers(userCh)
+	go repository.ProcessAlerts(alertCh)
 
-	time.Sleep(10 * time.Second)
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	<-sigCh
 
-	fmt.Println("Программа завершила работу")
+	close(logCh)
+	close(userCh)
+	close(alertCh)
+
+	println("Приложение завершено корректно.")
 }

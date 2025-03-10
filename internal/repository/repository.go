@@ -1,19 +1,28 @@
 package repository
 
-import "siem-system/internal/model"
+import (
+	"fmt"
+	"siem-system/internal/model"
+)
 
-var Logs []model.Log
-var Users []model.User
-var Alerts []model.Alert
-
-func SaveLog(log model.Log) {
-	Logs = append(Logs, log)
+func ProcessLogs(logCh <-chan model.Log) {
+	for log := range logCh {
+		fmt.Println("Log:", log)
+	}
 }
 
-func SaveUser(user model.User) {
-	Users = append(Users, user)
+func ProcessUsers(userCh <-chan model.User) {
+	for user := range userCh {
+		fmt.Println("User:", user)
+	}
 }
 
-func SaveAlert(alert model.Alert) {
-	Alerts = append(Alerts, alert)
+func ProcessAlerts(alertCh <-chan model.Alert) {
+	for alert := range alertCh {
+		fmt.Println("Alert:", alert)
+	}
+}
+
+func LogChanges() {
+	fmt.Println("Logging changes...")
 }
