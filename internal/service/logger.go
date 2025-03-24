@@ -1,12 +1,14 @@
 package service
 
 import (
-	"fmt"
-	"siem-system/internal/repository"
+	"log"
+	"os"
 )
 
-func PrintLogs() {
-	for _, log := range repository.Logs {
-		fmt.Printf("Log: %s, Level: %s\n", log.Message, log.Level)
+func InitializeLogger() *log.Logger {
+	file, err := os.OpenFile("app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
 	}
+	return log.New(file, "SIEM: ", log.LstdFlags)
 }

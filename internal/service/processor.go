@@ -1,27 +1,29 @@
 package service
 
-import "siem-system/internal/repository"
+import (
+	"fmt"
+	"siem-system/internal/model"
+)
 
-func GetLogs() []string {
-	var result []string
-	for _, log := range repository.Logs {
-		result = append(result, log.Message)
-	}
-	return result
+type Processor struct {
+	store *Store
 }
 
-func GetUsers() []string {
-	var result []string
-	for _, user := range repository.Users {
-		result = append(result, user.Name)
-	}
-	return result
+func NewProcessor(store *Store) *Processor {
+	return &Processor{store: store}
 }
 
-func GetAlerts() []string {
-	var result []string
-	for _, alert := range repository.Alerts {
-		result = append(result, alert.Description)
-	}
-	return result
+func (p *Processor) ProcessLog(log model.Log) {
+	fmt.Println("Processing log:", log.Message)
+	p.store.Logs = append(p.store.Logs, log)
+}
+
+func (p *Processor) ProcessUser(user model.User) {
+	fmt.Println("Processing user:", user.Username)
+	p.store.Users = append(p.store.Users, user)
+}
+
+func (p *Processor) ProcessAlert(alert model.Alert) {
+	fmt.Println("Processing alert:", alert.Details)
+	p.store.Alerts = append(p.store.Alerts, alert)
 }

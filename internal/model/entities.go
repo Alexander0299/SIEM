@@ -1,16 +1,21 @@
 package model
 
+import "time"
+
 type Log struct {
-	Message string `json:"message"`
-	Level   string `json:"level"`
+	ID        int       `json:"id"`
+	Message   string    `json:"message"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 type User struct {
-	Name string `json:"name"`
-	Role string `json:"role"`
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
 }
 
 type Alert struct {
-	Description string `json:"description"`
-	Severity    string `json:"severity"`
+	ID      int    `json:"id"`
+	Level   string `json:"level"`
+	Details string `json:"details"`
 }
