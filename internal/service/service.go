@@ -7,20 +7,6 @@ import (
 	"time"
 )
 
-type Store struct {
-	Logs   []model.Log
-	Users  []model.User
-	Alerts []model.Alert
-}
-
-func NewStore() *Store {
-	return &Store{
-		Logs:   make([]model.Log, 0),
-		Users:  make([]model.User, 0),
-		Alerts: make([]model.Alert, 0),
-	}
-}
-
 func GenerateData(logCh chan<- model.Log, userCh chan<- model.User, alertCh chan<- model.Alert) {
 	for {
 		time.Sleep(500 * time.Millisecond)

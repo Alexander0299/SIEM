@@ -1,40 +1,42 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
 	"siem-system/internal/model"
-	"siem-system/internal/service"
+	"siem-system/internal/repository"
 	"syscall"
+	"time"
 )
 
 func main() {
-	logCh := make(chan model.Log)
-	userCh := make(chan model.User)
-	alertCh := make(chan model.Alert)
 
-	store := service.NewStore()
+	repo := repository.NewRepository("logs.csv", "users.csv", "alerts.csv")
 
-	processor := service.NewProcessor(store)
+	repo.AddLog(model.Log{
+		ID:        1,
+		Message:   "Система запущена",
+		Timestamp: time.Now(),
+	})
 
-	go func() {
-		for {
-			select {
-			case log := <-logCh:
-				processor.ProcessLog(log)
-			case user := <-userCh:
-				processor.ProcessUser(user)
-			case alert := <-alertCh:
-				processor.ProcessAlert(alert)
-			}
-		}
-	}()
+	repo.AddUser(model.User{
+		ID:       1,
+		Username: "Admin",
+		Email:    "Administrator",
+	})
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
+	repo.AddAlert(model.Alert{
+		ID:      1,
+		Details: "Неудачная попытка входа",
+		Level:   "High",
+	})
 
-	<-ctx.Done()
-	fmt.Println("\nПриложение завершено корректно")
+	fmt.Println("Данные сохранены.")
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+
+	<-sigs
+	fmt.Println("\nЗавершаем работу gracefully...")
 }
