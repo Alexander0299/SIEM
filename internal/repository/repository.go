@@ -2,98 +2,135 @@ package repository
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 	"siem-system/internal/model"
 	"strconv"
-	"sync"
+	"time"
 )
 
 type Repository struct {
-	mu            sync.Mutex
-	Logs          []model.Log
-	Users         []model.User
-	Alerts        []model.Alert
-	logFilePath   string
-	userFilePath  string
-	alertFilePath string
+	logFile   string
+	userFile  string
+	alertFile string
+	logs      []model.Log
+	users     []model.User
+	alerts    []model.Alert
 }
 
 func NewRepository(logFile, userFile, alertFile string) *Repository {
 	return &Repository{
-		logFilePath:   logFile,
-		userFilePath:  userFile,
-		alertFilePath: alertFile,
+		logFile:   logFile,
+		userFile:  userFile,
+		alertFile: alertFile,
+		logs:      []model.Log{},
+		users:     []model.User{},
+		alerts:    []model.Alert{},
 	}
 }
 
-func (r *Repository) AddLog(log model.Log) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.Logs = append(r.Logs, log)
-	saveToCSV(r.logFilePath, logsToCSV(r.Logs))
-}
+func (r *Repository) Load() error {
 
-func (r *Repository) AddUser(user model.User) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.Users = append(r.Users, user)
-	saveToCSV(r.userFilePath, usersToCSV(r.Users))
-}
-
-func (r *Repository) AddAlert(alert model.Alert) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.Alerts = append(r.Alerts, alert)
-	saveToCSV(r.alertFilePath, alertsToCSV(r.Alerts))
-}
-
-func logsToCSV(logs []model.Log) [][]string {
-	data := [][]string{{"ID", "Message", "Timestamp"}}
-	for _, log := range logs {
-		data = append(data, []string{
-			strconv.Itoa(log.ID),
-			log.Message,
-			log.Timestamp.Format("2006-01-02 15:04:05"),
-		})
+	if err := r.loadLogs(); err != nil {
+		return err
 	}
-	return data
-}
 
-func usersToCSV(users []model.User) [][]string {
-	data := [][]string{{"ID", "Name", "Role"}}
-	for _, user := range users {
-		data = append(data, []string{
-			strconv.Itoa(user.ID),
-			user.Username,
-			user.Email,
-		})
+	if err := r.loadUsers(); err != nil {
+		return err
 	}
-	return data
-}
 
-func alertsToCSV(alerts []model.Alert) [][]string {
-	data := [][]string{{"ID", "Details", "Level"}}
-	for _, alert := range alerts {
-		data = append(data, []string{
-			strconv.Itoa(alert.ID),
-			alert.Level,
-			alert.Details,
-		})
+	if err := r.loadAlerts(); err != nil {
+		return err
 	}
-	return data
+
+	return nil
 }
 
-func saveToCSV(filePath string, data [][]string) {
-	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+func (r *Repository) loadLogs() error {
+	file, err := os.Open(r.logFile)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("ошибка открытия файла логов: %v", err)
 	}
 	defer file.Close()
 
-	writer := csv.NewWriter(file)
-	err = writer.WriteAll(data)
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("ошибка чтения CSV: %v", err)
 	}
-	writer.Flush()
+	if len(records) > 0 {
+		records = records[1:]
+	}
+	for _, record := range records {
+		id, err := strconv.Atoi(record[0])
+		if err != nil {
+			return fmt.Errorf("ошибка парсинга ID: %v", err)
+		}
+
+		timeValue, err := time.Parse("2006-01-02 15:04:05", record[2])
+		if err != nil {
+			return fmt.Errorf("ошибка парсинга времени: %v", err)
+		}
+
+		logEntry := model.Log{
+			ID:        id,
+			Message:   record[1],
+			Timestamp: timeValue,
+		}
+
+		r.logs = append(r.logs, logEntry)
+	}
+
+	fmt.Println("Логи загружены успешно.")
+	return nil
+}
+
+func (r *Repository) loadUsers() error {
+	file, err := os.Open(r.userFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return err
+	}
+
+	for _, record := range records {
+		id, _ := strconv.Atoi(record[0])
+		r.users = append(r.users, model.User{
+			ID:       id,
+			Username: record[1],
+			Email:    record[2],
+		})
+	}
+	fmt.Println("Пользователи загружены")
+	return nil
+}
+
+func (r *Repository) loadAlerts() error {
+	file, err := os.Open(r.alertFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return err
+	}
+
+	for _, record := range records {
+		id, _ := strconv.Atoi(record[0])
+		r.alerts = append(r.alerts, model.Alert{
+			ID:      id,
+			Details: record[1],
+			Level:   record[2],
+		})
+	}
+	fmt.Println("Алерты загружены")
+	return nil
 }
