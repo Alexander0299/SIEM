@@ -2,29 +2,17 @@ package main
 
 import (
 	"fmt"
-	"siem-system/internal/model"
-	"siem-system/internal/service"
-	"sync"
-	"time"
+	"siem-system/internal/repository"
 )
 
 func main() {
+	repo := repository.NewRepository("logs.csv", "users.csv", "alerts.csv")
 
-	logCh := make(chan model.Log, 10)
-	userCh := make(chan model.User, 10)
-	alertCh := make(chan model.Alert, 10)
+	if err := repo.Load(); err != nil {
+		fmt.Println("Ошибка загрузки данных:", err)
+		return
+	}
 
-	var logMutex, userMutex, alertMutex sync.Mutex
+	fmt.Println("Данные восстановлены.")
 
-	go service.ProcessLogs(logCh, &logMutex)
-	go service.ProcessUsers(userCh, &userMutex)
-	go service.ProcessAlerts(alertCh, &alertMutex)
-
-	go service.LogChanges(&logMutex, &userMutex, &alertMutex)
-
-	go service.GenerateData(logCh, userCh, alertCh)
-
-	time.Sleep(10 * time.Second)
-
-	fmt.Println("Программа завершила работу")
 }

@@ -19,7 +19,7 @@ func GenerateData(logCh chan<- model.Log, userCh chan<- model.User, alertCh chan
 
 		userCh <- model.User{
 			ID:       rand.Intn(1000),
-			Username: "User_" + fmt.Sprint(rand.Intn(100)),
+			Username: fmt.Sprintf("User_%d", rand.Intn(100)),
 			Email:    "user@example.com",
 		}
 
