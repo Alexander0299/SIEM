@@ -1,18 +1,19 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"net/http"
+	"siem-system/internal/handlers"
 	"siem-system/internal/repository"
 )
 
 func main() {
-	repo := repository.NewRepository("logs.csv", "users.csv", "alerts.csv")
 
-	if err := repo.Load(); err != nil {
-		fmt.Println("Ошибка загрузки данных:", err)
-		return
-	}
+	repo := repository.NewRepository("logs.csv")
 
-	fmt.Println("Данные восстановлены.")
+	http.HandleFunc("/api/logs", handlers.GetLogs(repo))
+	http.HandleFunc("/api/log/", handlers.GetLogByID(repo))
 
+	log.Println("Сервер работает на порту 8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }

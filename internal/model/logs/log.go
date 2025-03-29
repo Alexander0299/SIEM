@@ -1,5 +1,6 @@
 package logs
 
 type Log struct {
-	Content string
+	ID      int    `json:"id"`
+	Message string `json:"message"`
 }
