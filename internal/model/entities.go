@@ -19,3 +19,8 @@ type Alert struct {
 	Level   string `json:"level"`
 	Details string `json:"details"`
 }
+type Item struct {
+	ID      int    `json:"id"`
+	Level   string `json:"level"`
+	Details string `json:"details"`
+}

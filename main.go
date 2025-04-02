@@ -3,17 +3,34 @@ package main
 import (
 	"log"
 	"net/http"
-	"siem-system/internal/handlers"
-	"siem-system/internal/repository"
+
+	"siem-sistem/internal/handler"
+	"siem-sistem/internal/repository"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
+	// Создаём репозиторий
+	repo := repository.NewRepository()
 
-	repo := repository.NewRepository("logs.csv")
+	// Загружаем данные (если метод Load нужен)
+	if err := repo.Load(); err != nil {
+		log.Fatalf("Ошибка загрузки данных: %v", err)
+	}
 
-	http.HandleFunc("/api/logs", handlers.GetLogs(repo))
-	http.HandleFunc("/api/log/", handlers.GetLogByID(repo))
+	// Создаём обработчик с репозиторием
+	h := handler.NewHandler(repo)
 
-	log.Println("Сервер работает на порту 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	// Настраиваем маршруты
+	r := mux.NewRouter()
+	r.HandleFunc("/api/items", h.GetItems).Methods("GET")
+	r.HandleFunc("/api/items/{id:[0-9]+}", h.GetItemByID).Methods("GET")
+	r.HandleFunc("/api/items", h.CreateItem).Methods("POST")
+	r.HandleFunc("/api/items/{id:[0-9]+}", h.UpdateItem).Methods("PUT")
+	r.HandleFunc("/api/items/{id:[0-9]+}", h.DeleteItem).Methods("DELETE")
+
+	// Запускаем сервер
+	log.Println("Сервер запущен на порту 8080")
+	log.Fatal(http.ListenAndServe(":8080", r))
 }

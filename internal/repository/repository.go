@@ -1,46 +1,79 @@
 package repository
 
 import (
-	"encoding/csv"
-	"os"
-	"siem-system/internal/model"
-	"strconv"
 	"sync"
+
+	"siem-sistem/internal/model"
 )
 
 type Repository struct {
-	Logs []model.Log
-	mu   sync.Mutex
+	mu    sync.Mutex
+	items map[int]model.Item
 }
 
-func NewRepository(logFile string) *Repository {
-	repo := &Repository{}
-	repo.loadLogs(logFile)
-	return repo
-}
-
-func (r *Repository) loadLogs(filename string) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return
-	}
-
-	for _, record := range records {
-		id, _ := strconv.Atoi(record[0])
-		log := model.Log{ID: id, Message: record[1]}
-		r.Logs = append(r.Logs, log)
+// Конструктор без аргументов
+func NewRepository() *Repository {
+	return &Repository{
+		items: make(map[int]model.Item),
 	}
 }
 
-func (r *Repository) AddLog(log model.Log) {
+// Метод Load (если он нужен)
+func (r *Repository) Load() error {
+	// Заглушка, если этот метод должен загружать данные из файлов
+	return nil
+}
+
+func (r *Repository) GetAllItems() []model.Item {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.Logs = append(r.Logs, log)
+
+	var result []model.Item
+	for _, item := range r.items {
+		result = append(result, item)
+	}
+	return result
+}
+
+func (r *Repository) GetItemByID(id int) (model.Item, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	item, found := r.items[id]
+	return item, found
+}
+
+func (r *Repository) AddItem(item model.Item) int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	id := len(r.items) + 1
+	item.ID = id
+	r.items[id] = item
+	return id
+}
+
+func (r *Repository) UpdateItem(id int, updatedItem model.Item) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, found := r.items[id]; !found {
+		return false
+	}
+
+	updatedItem.ID = id
+	r.items[id] = updatedItem
+	return true
+}
+
+func (r *Repository) DeleteItem(id int) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, found := r.items[id]; !found {
+		return false
+	}
+
+	delete(r.items, id)
+	return true
 }
