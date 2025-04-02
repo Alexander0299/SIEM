@@ -3,11 +3,11 @@ package service
 import (
 	"fmt"
 	"math/rand"
-	"siem-system/internal/model"
+	"siem-sistem/internal/model"
 	"time"
 )
 
-func GenerateData(logCh chan<- model.Log, userCh chan<- model.User, alertCh chan<- model.Alert) {
+func GenerateData(logCh chan<- model.Log, userCh chan<- model.User, alertCh chan<- model.Alert, itemCh chan<- model.Item) {
 	for {
 		time.Sleep(500 * time.Millisecond)
 
@@ -24,6 +24,12 @@ func GenerateData(logCh chan<- model.Log, userCh chan<- model.User, alertCh chan
 		}
 
 		alertCh <- model.Alert{
+			ID:      rand.Intn(1000),
+			Level:   "High",
+			Details: "Potential security threat detected",
+		}
+
+		itemCh <- model.Item{
 			ID:      rand.Intn(1000),
 			Level:   "High",
 			Details: "Potential security threat detected",

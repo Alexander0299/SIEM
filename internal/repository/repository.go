@@ -1,136 +1,79 @@
 package repository
 
 import (
-	"encoding/csv"
-	"fmt"
-	"os"
-	"siem-system/internal/model"
-	"strconv"
-	"time"
+	"sync"
+
+	"siem-sistem/internal/model"
 )
 
 type Repository struct {
-	logFile   string
-	userFile  string
-	alertFile string
-	logs      []model.Log
-	users     []model.User
-	alerts    []model.Alert
+	mu    sync.Mutex
+	items map[int]model.Item
 }
 
-func NewRepository(logFile, userFile, alertFile string) *Repository {
+// Конструктор без аргументов
+func NewRepository() *Repository {
 	return &Repository{
-		logFile:   logFile,
-		userFile:  userFile,
-		alertFile: alertFile,
-		logs:      []model.Log{},
-		users:     []model.User{},
-		alerts:    []model.Alert{},
+		items: make(map[int]model.Item),
 	}
 }
 
+// Метод Load (если он нужен)
 func (r *Repository) Load() error {
-
-	if err := r.loadLogs(); err != nil {
-		return err
-	}
-
-	if err := r.loadUsers(); err != nil {
-		return err
-	}
-
-	if err := r.loadAlerts(); err != nil {
-		return err
-	}
-
+	// Заглушка, если этот метод должен загружать данные из файлов
 	return nil
 }
 
-func (r *Repository) loadLogs() error {
-	file, err := os.Open(r.logFile)
-	if err != nil {
-		return fmt.Errorf("ошибка открытия файла логов: %v", err)
+func (r *Repository) GetAllItems() []model.Item {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	var result []model.Item
+	for _, item := range r.items {
+		result = append(result, item)
 	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return fmt.Errorf("ошибка чтения CSV: %v", err)
-	}
-	if len(records) > 0 {
-		records = records[1:]
-	}
-	for _, record := range records {
-		id, err := strconv.Atoi(record[0])
-		if err != nil {
-			return fmt.Errorf("ошибка парсинга ID: %v", err)
-		}
-
-		timeValue, err := time.Parse("2006-01-02 15:04:05", record[2])
-		if err != nil {
-			return fmt.Errorf("ошибка парсинга времени: %v", err)
-		}
-
-		logEntry := model.Log{
-			ID:        id,
-			Message:   record[1],
-			Timestamp: timeValue,
-		}
-
-		r.logs = append(r.logs, logEntry)
-	}
-
-	fmt.Println("Логи загружены успешно.")
-	return nil
+	return result
 }
 
-func (r *Repository) loadUsers() error {
-	file, err := os.Open(r.userFile)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
+func (r *Repository) GetItemByID(id int) (model.Item, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return err
-	}
-
-	for _, record := range records {
-		id, _ := strconv.Atoi(record[0])
-		r.users = append(r.users, model.User{
-			ID:       id,
-			Username: record[1],
-			Email:    record[2],
-		})
-	}
-	fmt.Println("Пользователи загружены")
-	return nil
+	item, found := r.items[id]
+	return item, found
 }
 
-func (r *Repository) loadAlerts() error {
-	file, err := os.Open(r.alertFile)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
+func (r *Repository) AddItem(item model.Item) int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return err
+	id := len(r.items) + 1
+	item.ID = id
+	r.items[id] = item
+	return id
+}
+
+func (r *Repository) UpdateItem(id int, updatedItem model.Item) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, found := r.items[id]; !found {
+		return false
 	}
 
-	for _, record := range records {
-		id, _ := strconv.Atoi(record[0])
-		r.alerts = append(r.alerts, model.Alert{
-			ID:      id,
-			Details: record[1],
-			Level:   record[2],
-		})
+	updatedItem.ID = id
+	r.items[id] = updatedItem
+	return true
+}
+
+func (r *Repository) DeleteItem(id int) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, found := r.items[id]; !found {
+		return false
 	}
-	fmt.Println("Алерты загружены")
-	return nil
+
+	delete(r.items, id)
+	return true
 }
