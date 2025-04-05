@@ -1,32 +1,15 @@
 package service
 
-import (
-	"fmt"
-	"math/rand"
-	"siem-system/internal/model"
-	"time"
-)
+import "siem-sistem/internal/repository"
 
-func GenerateData(logCh chan<- model.Log, userCh chan<- model.User, alertCh chan<- model.Alert) {
-	for {
-		time.Sleep(500 * time.Millisecond)
+type Service struct {
+	Repo *repository.Repository
+}
 
-		logCh <- model.Log{
-			ID:        rand.Intn(1000),
-			Message:   "New log entry",
-			Timestamp: time.Now(),
-		}
+func NewService(repo *repository.Repository) *Service {
+	return &Service{Repo: repo}
+}
 
-		userCh <- model.User{
-			ID:       rand.Intn(1000),
-			Username: fmt.Sprintf("User_%d", rand.Intn(100)),
-			Email:    "user@example.com",
-		}
-
-		alertCh <- model.Alert{
-			ID:      rand.Intn(1000),
-			Level:   "High",
-			Details: "Potential security threat detected",
-		}
-	}
+func (s *Service) GetAllItems() (string, error) {
+	return s.Repo.GetAllItems()
 }
