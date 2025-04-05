@@ -9,6 +9,6 @@ func NewRepository(dataSource string) *Repository {
 }
 
 func (r *Repository) GetAllItems() (string, error) {
-	// Тут можешь подключить чтение из файла items.csv
+
 	return `["item1", "item2", "item3"]`, nil
 }
