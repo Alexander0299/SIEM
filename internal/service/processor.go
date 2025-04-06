@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"siem-system/internal/model"
+	"siem-sistem/internal/model"
 	"time"
 )
 
@@ -19,4 +19,8 @@ func ProcessUser(user model.User) {
 func ProcessAlert(alert model.Alert) {
 	time.Sleep(time.Second)
 	fmt.Println("Processed alert:", alert.Details)
+}
+func ProcessItem(item model.Item) {
+	time.Sleep(time.Second)
+	fmt.Println("Processed alert:", item.Name)
 }
