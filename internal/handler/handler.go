@@ -1,13 +1,31 @@
 package handler
 
 import (
-	"siem-sistem/internal/service"
+	"fmt"
+	"net/http"
+	"siem-sistem/internal/config"
 )
 
 type Handler struct {
-	Service *service.Service
+	Cfg *config.Config
 }
 
-func NewHandler(service *service.Service) *Handler {
-	return &Handler{Service: service}
+func NewHandler(cfg *config.Config) *Handler {
+	return &Handler{Cfg: cfg}
+}
+
+func (h *Handler) Base(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Base handler")
+}
+
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Login handler")
+}
+
+func (h *Handler) UserUpdate(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "User Update handler")
+}
+func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("pong"))
 }

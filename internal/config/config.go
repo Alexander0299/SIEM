@@ -3,35 +3,51 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Port      string
-	JWTSecret string
-	Username  string
-	Password  string
-	LogFile   string
-	UserFile  string
-	AlertFile string
-	ItemFile  string
+	ServerPort string
+	Login      string
+	Password   string
+	JWTSecret  string
+	Host       string
+	Port       int
 }
 
-func LoadConfig() *Config {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+var cfg Config
+
+func LoadConfig() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("Файл .env не найден, используем переменные окружения")
 	}
 
-	return &Config{
-		Port:      os.Getenv("PORT"),
-		JWTSecret: os.Getenv("JWT_SECRET"),
-		Username:  os.Getenv("USERNAME"),
-		Password:  os.Getenv("PASSWORD"),
-		LogFile:   os.Getenv("LOG_FILE"),
-		UserFile:  os.Getenv("USER_FILE"),
-		AlertFile: os.Getenv("ALERT_FILE"),
-		ItemFile:  os.Getenv("ITEM_FILE"),
+	cfg = Config{
+		ServerPort: getEnv("SERVER_PORT", "8080"),
+		Host:       os.Getenv("HOST"),
+		Port:       mustParseInt(os.Getenv("PORT")),
+		JWTSecret:  os.Getenv("JWT_SECRET"),
+		Login:      os.Getenv("LOGIN"),
+		Password:   os.Getenv("PASSWORD"),
 	}
+}
+
+func GetConfig() Config {
+	return cfg
+}
+
+func getEnv(key, defaultValue string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return defaultValue
+}
+func mustParseInt(s string) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		log.Fatalf("failed to parse int: %v", err)
+	}
+	return i
 }

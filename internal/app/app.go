@@ -1,22 +1,33 @@
 package app
 
 import (
+	"fmt"
 	"net/http"
+	"siem-sistem/internal/config"
 	"siem-sistem/internal/handler"
-	"siem-sistem/internal/repository"
-	"siem-sistem/internal/service"
+	"siem-sistem/internal/routes"
 )
 
 type App struct {
-	repo  *repository.Repository
-	svc   *service.Service
-	hndlr *handler.Handler
+	cfg *config.Config
 }
 
-func NewApp(repo *repository.Repository, svc *service.Service, hndlr *handler.Handler) *App {
-	return &App{repo: repo, svc: svc, hndlr: hndlr}
+func NewApp(cfg *config.Config) *App {
+	return &App{cfg: cfg}
 }
 
-func (a *App) ListenAndServe(addr string, handler http.Handler) error {
-	return http.ListenAndServe(addr, handler)
+func (a *App) Start() error {
+	mux := http.NewServeMux()
+
+	h := handler.NewHandler(a.cfg)
+	routes.RegisterRoutes(mux, h)
+
+	serverHTTP := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", a.cfg.Host, a.cfg.Port),
+		Handler: mux,
+	}
+
+	fmt.Printf("Сервер запущен на %s:%d\n", a.cfg.Host, a.cfg.Port)
+
+	return serverHTTP.ListenAndServe()
 }
