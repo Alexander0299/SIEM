@@ -1,18 +1,14 @@
 package config
 
 type Config struct {
-	Host   string
-	Port   int
-	Secret string
+	Host string
+	Port int
 }
 
-var Cfg Config
-
 func NewConfig() *Config {
-	Cfg := Config{
-		Host:   "0.0.0.0",
-		Port:   8080,
-		Secret: "sadffs87fiofnsdkjdndsфаыпдлат",
+	return &Config{
+		Host: "0.0.0.0",
+		Port: 8585,
 	}
-	return &Cfg
+
 }
