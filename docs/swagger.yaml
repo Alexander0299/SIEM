@@ -1,0 +1,374 @@
+definitions:
+  model.Alert:
+    properties:
+      massage:
+        type: string
+    type: object
+  model.Log:
+    properties:
+      area:
+        type: string
+    type: object
+  model.User:
+    properties:
+      login:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/alert:
+    post:
+      consumes:
+      - application/json
+      description: Добавляет нового уведомление
+      parameters:
+      - description: Уведомление
+        in: body
+        name: alert
+        required: true
+        schema:
+          $ref: '#/definitions/model.Alert'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Создано
+          schema:
+            type: string
+        "400":
+          description: Неверный ввод
+          schema:
+            type: string
+      summary: Создать уведомление
+      tags:
+      - alerts
+  /api/alert/{id}:
+    delete:
+      description: Удаляет уведомление по ID
+      parameters:
+      - description: ID уведомления
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Удалено
+          schema:
+            type: string
+        "404":
+          description: Уведомление не найдено
+          schema:
+            type: string
+      summary: Удалить уведомление
+      tags:
+      - alerts
+    get:
+      description: Возвращает уведомление по ID
+      parameters:
+      - description: ID уведомления
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Alert'
+        "404":
+          description: Уведомление не найдено
+          schema:
+            type: string
+      summary: Получить уведомление по ID
+      tags:
+      - alerts
+    put:
+      consumes:
+      - application/json
+      description: Обновляет уведомления по ID
+      parameters:
+      - description: ID уведомления
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Уведомление
+        in: body
+        name: alert
+        required: true
+        schema:
+          $ref: '#/definitions/model.Alert'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновлено
+          schema:
+            type: string
+        "400":
+          description: Неверный ввод
+          schema:
+            type: string
+        "404":
+          description: Уведомление не найдено
+          schema:
+            type: string
+      summary: Обновить уведомление
+      tags:
+      - alerts
+  /api/alerts:
+    get:
+      description: Возвращает список всех уведомлений
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Alert'
+            type: array
+      summary: Получить все уведомления
+      tags:
+      - alerts
+  /api/log:
+    post:
+      consumes:
+      - application/json
+      description: Добавляет новый лог
+      parameters:
+      - description: Лог
+        in: body
+        name: log
+        required: true
+        schema:
+          $ref: '#/definitions/model.Log'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Создано
+          schema:
+            type: string
+        "400":
+          description: Неверный ввод
+          schema:
+            type: string
+      summary: Создать лог
+      tags:
+      - logs
+  /api/log/{id}:
+    delete:
+      description: Удаляет лог по ID
+      parameters:
+      - description: ID лога
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Удалено
+          schema:
+            type: string
+        "404":
+          description: Лог не найдено
+          schema:
+            type: string
+      summary: Удалить лог
+      tags:
+      - logs
+    get:
+      description: Возвращает логи по ID
+      parameters:
+      - description: ID логов
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Log'
+        "404":
+          description: Лог не найден
+          schema:
+            type: string
+      summary: Получить логи по ID
+      tags:
+      - logs
+    put:
+      consumes:
+      - application/json
+      description: Обновляет логи по ID
+      parameters:
+      - description: ID лога
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Лог
+        in: body
+        name: log
+        required: true
+        schema:
+          $ref: '#/definitions/model.Log'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновлено
+          schema:
+            type: string
+        "400":
+          description: Неверный ввод
+          schema:
+            type: string
+        "404":
+          description: Лог не найдено
+          schema:
+            type: string
+      summary: Обновить логи
+      tags:
+      - logs
+  /api/logs:
+    get:
+      description: Возвращает список всех логов
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Log'
+            type: array
+      summary: Получить все логи
+      tags:
+      - logs
+  /api/user:
+    post:
+      consumes:
+      - application/json
+      description: Добавляет нового пользователя
+      parameters:
+      - description: Пользователь
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Создано
+          schema:
+            type: string
+        "400":
+          description: Неверный ввод
+          schema:
+            type: string
+      summary: Создать пользователя
+      tags:
+      - users
+  /api/user/{id}:
+    delete:
+      description: Удаляет пользователя по ID
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Удалено
+          schema:
+            type: string
+        "404":
+          description: Пользователь не найден
+          schema:
+            type: string
+      summary: Удалить пользователя
+      tags:
+      - users
+    get:
+      description: Возвращает пользователя по ID
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.User'
+        "404":
+          description: Пользователь не найден
+          schema:
+            type: string
+      summary: Получить пользователя по ID
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Обновляет данные пользователя по ID
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Пользователь
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновлено
+          schema:
+            type: string
+        "400":
+          description: Неверный ввод
+          schema:
+            type: string
+        "404":
+          description: Пользователь не найден
+          schema:
+            type: string
+      summary: Обновить пользователя
+      tags:
+      - users
+  /api/users:
+    get:
+      description: Возвращает список всех пользователей
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.User'
+            type: array
+      summary: Получить всех пользователей
+      tags:
+      - users
+swagger: "2.0"
