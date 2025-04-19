@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package siem;
+
+option go_package = "internal/proto";
+
+message User {
+  int32 id = 1;
+  string login = 2;
+}
+
+message Alert {
+  int32 id = 1;
+  string message = 2;
+}
+
+message Log {
+  int32 id = 1;
+  string area = 2;
+}
+
+message UserID {
+  int32 id = 1;
+}
+
+message AlertID {
+  int32 id = 1;
+}
+
+message LogID {
+  int32 id = 1;
+}
+
+message Empty {}
+
+message UserList {
+  repeated User users = 1;
+}
+
+message AlertList {
+  repeated Alert alerts = 1;
+}
+
+message LogList {
+  repeated Log logs = 1;
+}
+
+service UserService {
+  rpc CreateUser(User) returns (User);
+  rpc GetUser(UserID) returns (User);
+  rpc UpdateUser(User) returns (User);
+  rpc DeleteUser(UserID) returns (Empty);
+  rpc ListUsers(Empty) returns (UserList);
+}
+
+service AlertService {
+  rpc CreateAlert(Alert) returns (Alert);
+  rpc GetAlert(AlertID) returns (Alert);
+  rpc UpdateAlert(Alert) returns (Alert);
+  rpc DeleteAlert(AlertID) returns (Empty);
+  rpc ListAlerts(Empty) returns (AlertList);
+}
+
+service LogService {
+  rpc CreateLog(Log) returns (Log);
+  rpc GetLog(LogID) returns (Log);
+  rpc UpdateLog(Log) returns (Log);
+  rpc DeleteLog(LogID) returns (Empty);
+  rpc ListLogs(Empty) returns (LogList);
+}
