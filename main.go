@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	// Инициализация CSV-данных
+	// для рестарта
 	service.SaveUsersCsv([]model.User{{Login: "Alex"}}, "users.csv")
 	service.SaveAlertsCsv([]model.Alert{{Massage: "Попытка взлома"}}, "alerts.csv")
 	service.SaveLogsCsv([]model.Log{{Area: "Антивирус Касперского"}}, "logs.csv")
@@ -26,13 +26,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Запуск воркеров
 	go service.AddUsers(ctx, usersChan)
 	go service.AddAlerts(ctx, alertsChan)
 	go service.AddLogs(ctx, logsChan)
 	go service.Logger(usersChan, alertsChan, logsChan)
 
-	// Запуск HTTP-сервера в горутине
+	// Запуск сервера
 	srv, err := app.NewService(ctx)
 	if err != nil {
 		log.Fatalf("failed to init app: %v", err)
@@ -43,6 +42,7 @@ func main() {
 			log.Printf("server stopped: %v", err)
 			cancel()
 		}
+
 	}()
 
 	// сигнал завершения
@@ -52,7 +52,7 @@ func main() {
 	<-sig
 	fmt.Println("Получен сигнал завершения...")
 
-	cancel() // корректное завершение
+	cancel()
 
 	fmt.Println("Программа завершена")
 }
