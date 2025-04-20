@@ -4,7 +4,7 @@
 // - protoc             v6.30.2
 // source: internal/proto/siem.proto
 
-package proto
+package pb
 
 import (
 	context "context"

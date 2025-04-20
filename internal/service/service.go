@@ -42,7 +42,7 @@ func getNextID(entity string) int {
 }
 
 func AddUsers(ctx context.Context, usersChan chan model.Inter) {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -59,7 +59,7 @@ func AddUsers(ctx context.Context, usersChan chan model.Inter) {
 }
 
 func AddAlerts(ctx context.Context, alertsChan chan model.Inter) {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -76,7 +76,7 @@ func AddAlerts(ctx context.Context, alertsChan chan model.Inter) {
 }
 
 func AddLogs(ctx context.Context, logsChan chan model.Inter) {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -99,7 +99,7 @@ func Logger(usersChan, alertsChan, logsChan chan model.Inter) {
 
 	var totalUsers, totalAlerts, totalLogs int
 
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
 
 	for {

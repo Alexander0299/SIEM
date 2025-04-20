@@ -4,7 +4,7 @@
 // 	protoc        v6.30.2
 // source: internal/proto/siem.proto
 
-package proto
+package pb
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -532,7 +532,7 @@ const file_internal_proto_siem_proto_rawDesc = "" +
 	"\x06GetLog\x12\v.siem.LogID\x1a\t.siem.Log\x12!\n" +
 	"\tUpdateLog\x12\t.siem.Log\x1a\t.siem.Log\x12%\n" +
 	"\tDeleteLog\x12\v.siem.LogID\x1a\v.siem.Empty\x12&\n" +
-	"\bListLogs\x12\v.siem.Empty\x1a\r.siem.LogListB\x10Z\x0einternal/protob\x06proto3"
+	"\bListLogs\x12\v.siem.Empty\x1a\r.siem.LogListB\x16Z\x14internal/proto/pb;pbb\x06proto3"
 
 var (
 	file_internal_proto_siem_proto_rawDescOnce sync.Once

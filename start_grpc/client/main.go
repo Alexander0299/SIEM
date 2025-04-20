@@ -17,25 +17,16 @@ func main() {
 	}
 	defer conn.Close()
 
-	client := pb.NewUserServiceClient(conn)
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	// Создание пользователя
-	newUser, err := client.CreateUser(ctx, &pb.User{Login: "NewUser"})
-	if err != nil {
-		log.Fatalf("Ошибка при создании пользователя: %v", err)
-	}
-	log.Printf("Создан пользователь: ID=%d, Login=%s", newUser.Id, newUser.Login)
+	userClient := pb.NewUserServiceClient(conn)
 
-	// Получение всех пользователей
-	userList, err := client.ListUsers(ctx, &pb.Empty{})
+	// 🧪 Create User
+	uResp, err := userClient.CreateUser(ctx, &pb.User{Login: "admin"})
 	if err != nil {
-		log.Fatalf("Ошибка при получении списка пользователей: %v", err)
+		log.Fatalf("Ошибка создания пользователя: %v", err)
 	}
-	log.Println("Список пользователей:")
-	for _, u := range userList.Users {
-		log.Printf("ID=%d, Login=%s", u.Id, u.Login)
-	}
+	log.Printf("Создан пользователь: ID=%d, Login=%s", uResp.Id, uResp.Login)
+
 }

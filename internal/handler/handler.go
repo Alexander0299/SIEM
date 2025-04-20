@@ -1,15 +1,17 @@
 package handler
 
 import (
+	"context"
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"siem-sistem/internal/model"
+	pb "siem-sistem/internal/proto"
 	"strconv"
 	"strings"
-
-	"siem-sistem/internal/model"
 
 	"github.com/gorilla/mux"
 )
@@ -549,4 +551,226 @@ func DeleteLog(w http.ResponseWriter, r *http.Request) {
 	logs = append(logs[:id], logs[id+1:]...)
 	saveLogs(logs)
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// /////////////////
+
+const (
+	usersCSV  = "users.csv"
+	alertsCSV = "alerts.csv"
+	logsCSV   = "logs.csv"
+)
+
+type SiemHandler struct {
+	pb.UnimplementedUserServiceServer
+	pb.UnimplementedAlertServiceServer
+	pb.UnimplementedLogServiceServer
+}
+
+// /////////////////////
+func (s *SiemHandler) CreateUser(ctx context.Context, req *pb.User) (*pb.User, error) {
+	file, _ := os.OpenFile(usersCSV, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	defer file.Close()
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	id := getNextID(usersCSV)
+	writer.Write([]string{strconv.Itoa(id), req.Login})
+
+	return &pb.User{Id: int32(id), Login: req.Login}, nil
+}
+
+func (s *SiemHandler) GetUser(ctx context.Context, req *pb.UserID) (*pb.User, error) {
+	users, _ := readCSV(usersCSV)
+	for _, row := range users {
+		id, _ := strconv.Atoi(row[0])
+		if int32(id) == req.Id {
+			return &pb.User{Id: req.Id, Login: row[1]}, nil
+		}
+	}
+	return nil, fmt.Errorf("user not found")
+}
+
+func (s *SiemHandler) UpdateUser(ctx context.Context, req *pb.User) (*pb.User, error) {
+	rows, _ := readCSV(usersCSV)
+	for i, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		if int32(id) == req.Id {
+			rows[i][1] = req.Login
+			break
+		}
+	}
+	writeCSV(usersCSV, rows)
+	return req, nil
+}
+
+func (s *SiemHandler) DeleteUser(ctx context.Context, req *pb.UserID) (*pb.Empty, error) {
+	rows, _ := readCSV(usersCSV)
+	newRows := [][]string{}
+	for _, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		if int32(id) != req.Id {
+			newRows = append(newRows, row)
+		}
+	}
+	writeCSV(usersCSV, newRows)
+	return &pb.Empty{}, nil
+}
+
+func (s *SiemHandler) ListUsers(ctx context.Context, req *pb.Empty) (*pb.UserList, error) {
+	rows, _ := readCSV(usersCSV)
+	users := []*pb.User{}
+	for _, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		users = append(users, &pb.User{Id: int32(id), Login: row[1]})
+	}
+	return &pb.UserList{Users: users}, nil
+}
+
+// //////////////////
+func (s *SiemHandler) CreateAlert(ctx context.Context, req *pb.Alert) (*pb.Alert, error) {
+	file, _ := os.OpenFile(alertsCSV, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	defer file.Close()
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	id := getNextID(alertsCSV)
+	writer.Write([]string{strconv.Itoa(id), req.Message})
+
+	return &pb.Alert{Id: int32(id), Message: req.Message}, nil
+}
+
+func (s *SiemHandler) GetAlert(ctx context.Context, req *pb.AlertID) (*pb.Alert, error) {
+	rows, _ := readCSV(alertsCSV)
+	for _, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		if int32(id) == req.Id {
+			return &pb.Alert{Id: req.Id, Message: row[1]}, nil
+		}
+	}
+	return nil, fmt.Errorf("alert not found")
+}
+
+func (s *SiemHandler) UpdateAlert(ctx context.Context, req *pb.Alert) (*pb.Alert, error) {
+	rows, _ := readCSV(alertsCSV)
+	for i, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		if int32(id) == req.Id {
+			rows[i][1] = req.Message
+			break
+		}
+	}
+	writeCSV(alertsCSV, rows)
+	return req, nil
+}
+
+func (s *SiemHandler) DeleteAlert(ctx context.Context, req *pb.AlertID) (*pb.Empty, error) {
+	rows, _ := readCSV(alertsCSV)
+	newRows := [][]string{}
+	for _, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		if int32(id) != req.Id {
+			newRows = append(newRows, row)
+		}
+	}
+	writeCSV(alertsCSV, newRows)
+	return &pb.Empty{}, nil
+}
+
+func (s *SiemHandler) ListAlerts(ctx context.Context, req *pb.Empty) (*pb.AlertList, error) {
+	rows, _ := readCSV(alertsCSV)
+	alerts := []*pb.Alert{}
+	for _, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		alerts = append(alerts, &pb.Alert{Id: int32(id), Message: row[1]})
+	}
+	return &pb.AlertList{Alerts: alerts}, nil
+}
+
+// //////////////////////////
+func (s *SiemHandler) CreateLog(ctx context.Context, req *pb.Log) (*pb.Log, error) {
+	file, _ := os.OpenFile(logsCSV, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	defer file.Close()
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	id := getNextID(logsCSV)
+	writer.Write([]string{strconv.Itoa(id), req.Area})
+
+	return &pb.Log{Id: int32(id), Area: req.Area}, nil
+}
+
+func (s *SiemHandler) GetLog(ctx context.Context, req *pb.LogID) (*pb.Log, error) {
+	rows, _ := readCSV(logsCSV)
+	for _, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		if int32(id) == req.Id {
+			return &pb.Log{Id: req.Id, Area: row[1]}, nil
+		}
+	}
+	return nil, fmt.Errorf("log not found")
+}
+
+func (s *SiemHandler) UpdateLog(ctx context.Context, req *pb.Log) (*pb.Log, error) {
+	rows, _ := readCSV(logsCSV)
+	for i, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		if int32(id) == req.Id {
+			rows[i][1] = req.Area
+			break
+		}
+	}
+	writeCSV(logsCSV, rows)
+	return req, nil
+}
+
+func (s *SiemHandler) DeleteLog(ctx context.Context, req *pb.LogID) (*pb.Empty, error) {
+	rows, _ := readCSV(logsCSV)
+	newRows := [][]string{}
+	for _, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		if int32(id) != req.Id {
+			newRows = append(newRows, row)
+		}
+	}
+	writeCSV(logsCSV, newRows)
+	return &pb.Empty{}, nil
+}
+
+func (s *SiemHandler) ListLogs(ctx context.Context, req *pb.Empty) (*pb.LogList, error) {
+	rows, _ := readCSV(logsCSV)
+	logs := []*pb.Log{}
+	for _, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		logs = append(logs, &pb.Log{Id: int32(id), Area: row[1]})
+	}
+	return &pb.LogList{Logs: logs}, nil
+}
+
+// ///////////////////
+func readCSV(filePath string) ([][]string, error) {
+	file, _ := os.Open(filePath)
+	defer file.Close()
+	reader := csv.NewReader(file)
+	return reader.ReadAll()
+}
+
+func writeCSV(filePath string, data [][]string) error {
+	file, _ := os.Create(filePath)
+	defer file.Close()
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+	return writer.WriteAll(data)
+}
+
+func getNextID(filePath string) int {
+	rows, _ := readCSV(filePath)
+	maxID := 0
+	for _, row := range rows {
+		id, _ := strconv.Atoi(row[0])
+		if id > maxID {
+			maxID = id
+		}
+	}
+	return maxID + 1
 }
