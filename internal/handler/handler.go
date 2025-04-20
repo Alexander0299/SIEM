@@ -553,7 +553,7 @@ func DeleteLog(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// /////////////////
+// Grpc
 
 const (
 	usersCSV  = "users.csv"
@@ -567,7 +567,7 @@ type SiemHandler struct {
 	pb.UnimplementedLogServiceServer
 }
 
-// /////////////////////
+// Grpc User
 func (s *SiemHandler) CreateUser(ctx context.Context, req *pb.User) (*pb.User, error) {
 	file, _ := os.OpenFile(usersCSV, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	defer file.Close()
@@ -627,7 +627,7 @@ func (s *SiemHandler) ListUsers(ctx context.Context, req *pb.Empty) (*pb.UserLis
 	return &pb.UserList{Users: users}, nil
 }
 
-// //////////////////
+// Grpc Alert
 func (s *SiemHandler) CreateAlert(ctx context.Context, req *pb.Alert) (*pb.Alert, error) {
 	file, _ := os.OpenFile(alertsCSV, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	defer file.Close()
@@ -687,7 +687,7 @@ func (s *SiemHandler) ListAlerts(ctx context.Context, req *pb.Empty) (*pb.AlertL
 	return &pb.AlertList{Alerts: alerts}, nil
 }
 
-// //////////////////////////
+// Grpc Log
 func (s *SiemHandler) CreateLog(ctx context.Context, req *pb.Log) (*pb.Log, error) {
 	file, _ := os.OpenFile(logsCSV, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	defer file.Close()
@@ -747,7 +747,7 @@ func (s *SiemHandler) ListLogs(ctx context.Context, req *pb.Empty) (*pb.LogList,
 	return &pb.LogList{Logs: logs}, nil
 }
 
-// ///////////////////
+// доп.функции
 func readCSV(filePath string) ([][]string, error) {
 	file, _ := os.Open(filePath)
 	defer file.Close()

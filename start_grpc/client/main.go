@@ -22,7 +22,6 @@ func main() {
 
 	userClient := pb.NewUserServiceClient(conn)
 
-	// 🧪 Create User
 	uResp, err := userClient.CreateUser(ctx, &pb.User{Login: "admin"})
 	if err != nil {
 		log.Fatalf("Ошибка создания пользователя: %v", err)
