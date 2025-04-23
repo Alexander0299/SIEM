@@ -17,12 +17,12 @@ var (
 	idMutex sync.Mutex
 )
 
-func idFilePath(entity string) string {
+func IdFilePath(entity string) string {
 	return filepath.Join("restartcsv", fmt.Sprintf("%s_id.txt", entity))
 }
 
-func getCurrentID(entity string) int {
-	path := idFilePath(entity)
+func GetCurrentID(entity string) int {
+	path := IdFilePath(entity)
 	data, err := os.ReadFile(path)
 	if err == nil {
 		if val, err := strconv.Atoi(string(data)); err == nil {
@@ -32,12 +32,12 @@ func getCurrentID(entity string) int {
 	return 0
 }
 
-func getNextID(entity string) int {
+func GetNextID(entity string) int {
 	idMutex.Lock()
 	defer idMutex.Unlock()
-	current := getCurrentID(entity)
+	current := GetCurrentID(entity)
 	next := current + 1
-	os.WriteFile(idFilePath(entity), []byte(strconv.Itoa(next)), 0644)
+	os.WriteFile(IdFilePath(entity), []byte(strconv.Itoa(next)), 0644)
 	return next
 }
 
@@ -51,7 +51,7 @@ func AddUsers(ctx context.Context, usersChan chan model.Inter) {
 			return
 		case <-ticker.C:
 			usersChan <- model.User{
-				ID:    getNextID("user"),
+				ID:    GetNextID("user"),
 				Login: "Alex",
 			}
 		}
@@ -68,7 +68,7 @@ func AddAlerts(ctx context.Context, alertsChan chan model.Inter) {
 			return
 		case <-ticker.C:
 			alertsChan <- model.Alert{
-				ID:      getNextID("alert"),
+				ID:      GetNextID("alert"),
 				Massage: "Попытка взлома",
 			}
 		}
@@ -85,7 +85,7 @@ func AddLogs(ctx context.Context, logsChan chan model.Inter) {
 			return
 		case <-ticker.C:
 			logsChan <- model.Log{
-				ID:   getNextID("log"),
+				ID:   GetNextID("log"),
 				Area: "Антивирус Касперского",
 			}
 		}
@@ -129,8 +129,8 @@ func Logger(usersChan, alertsChan, logsChan chan model.Inter) {
 				logsChan = nil
 				continue
 			}
-			if log, ok := item.(model.Log); ok {
-				logs = append(logs, log)
+			if logItem, ok := item.(model.Log); ok {
+				logs = append(logs, logItem)
 				totalLogs++
 			}
 
@@ -138,13 +138,13 @@ func Logger(usersChan, alertsChan, logsChan chan model.Inter) {
 			log.Printf("Количество пользователей=%d, Количество уведомлений=%d, Количество логов=%d",
 				totalUsers, totalAlerts, totalLogs)
 
-			if err := SaveUsersCsv(users, "users.csv"); err != nil {
+			if err := RewriteUsersCSV(users, "users.csv"); err != nil {
 				log.Printf("Ошибка сохранения пользователей: %v", err)
 			}
-			if err := SaveAlertsCsv(alerts, "alerts.csv"); err != nil {
+			if err := RewriteAlertsCSV(alerts, "alerts.csv"); err != nil {
 				log.Printf("Ошибка сохранения уведомлений: %v", err)
 			}
-			if err := SaveLogsCsv(logs, "logs.csv"); err != nil {
+			if err := RewriteLogsCSV(logs, "logs.csv"); err != nil {
 				log.Printf("Ошибка сохранения логов: %v", err)
 			}
 
@@ -159,8 +159,8 @@ func Logger(usersChan, alertsChan, logsChan chan model.Inter) {
 	}
 }
 
-func SaveUsersCsv(users []model.User, filename string) error {
-	return saveCsv(filename, []string{"ID", "Пользователи:"}, func(w *csv.Writer) error {
+func RewriteUsersCSV(users []model.User, filename string) error {
+	return SaveCsv(filename, []string{"ID", "Пользователи:"}, func(w *csv.Writer) error {
 		for _, user := range users {
 			if err := w.Write([]string{
 				strconv.Itoa(user.ID),
@@ -173,8 +173,8 @@ func SaveUsersCsv(users []model.User, filename string) error {
 	})
 }
 
-func SaveAlertsCsv(alerts []model.Alert, filename string) error {
-	return saveCsv(filename, []string{"ID", "Уведомления:"}, func(w *csv.Writer) error {
+func RewriteAlertsCSV(alerts []model.Alert, filename string) error {
+	return SaveCsv(filename, []string{"ID", "Уведомления:"}, func(w *csv.Writer) error {
 		for _, alert := range alerts {
 			if err := w.Write([]string{
 				strconv.Itoa(alert.ID),
@@ -186,13 +186,12 @@ func SaveAlertsCsv(alerts []model.Alert, filename string) error {
 		return nil
 	})
 }
-
-func SaveLogsCsv(logs []model.Log, filename string) error {
-	return saveCsv(filename, []string{"ID", "Источники:"}, func(w *csv.Writer) error {
-		for _, logItem := range logs {
+func RewriteLogsCSV(logs []model.Log, filename string) error {
+	return SaveCsv(filename, []string{"ID", "Источники:"}, func(w *csv.Writer) error {
+		for _, log := range logs {
 			if err := w.Write([]string{
-				strconv.Itoa(logItem.ID),
-				logItem.Area,
+				strconv.Itoa(log.ID),
+				log.Area,
 			}); err != nil {
 				return err
 			}
@@ -200,9 +199,7 @@ func SaveLogsCsv(logs []model.Log, filename string) error {
 		return nil
 	})
 }
-
-// Упрощённая общая логика сохранения CSV
-func saveCsv(filename string, header []string, writeRows func(w *csv.Writer) error) error {
+func SaveCsv(filename string, header []string, writeRows func(w *csv.Writer) error) error {
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
@@ -212,7 +209,6 @@ func saveCsv(filename string, header []string, writeRows func(w *csv.Writer) err
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	// Пишем заголовки, если файл пустой
 	if stat, err := file.Stat(); err == nil && stat.Size() == 0 {
 		if err := writer.Write(header); err != nil {
 			return err
@@ -220,4 +216,90 @@ func saveCsv(filename string, header []string, writeRows func(w *csv.Writer) err
 	}
 
 	return writeRows(writer)
+}
+func LoadUsersFromCSV(filename string) []model.User {
+	var users []model.User
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Println("Ошибка открытия users CSV:", err)
+		return users
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Println("Ошибка чтения users CSV:", err)
+		return users
+	}
+
+	for i, row := range records {
+		if i == 0 {
+			continue
+		}
+		id, _ := strconv.Atoi(row[0])
+		users = append(users, model.User{
+			ID:    id,
+			Login: row[1],
+		})
+	}
+	return users
+}
+
+func LoadAlertsFromCSV(filename string) []model.Alert {
+	var alerts []model.Alert
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Println("Ошибка открытия alerts CSV:", err)
+		return alerts
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Println("Ошибка чтения alerts CSV:", err)
+		return alerts
+	}
+
+	for i, row := range records {
+		if i == 0 {
+			continue
+		}
+		id, _ := strconv.Atoi(row[0])
+		alerts = append(alerts, model.Alert{
+			ID:      id,
+			Massage: row[1],
+		})
+	}
+	return alerts
+}
+
+func LoadLogsFromCSV(filename string) []model.Log {
+	var logs []model.Log
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Println("Ошибка открытия logs CSV:", err)
+		return logs
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Println("Ошибка чтения logs CSV:", err)
+		return logs
+	}
+
+	for i, row := range records {
+		if i == 0 {
+			continue
+		}
+		id, _ := strconv.Atoi(row[0])
+		logs = append(logs, model.Log{
+			ID:   id,
+			Area: row[1],
+		})
+	}
+	return logs
 }

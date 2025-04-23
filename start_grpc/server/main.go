@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"siem-sistem/internal/handler"
+
 	pb "siem-sistem/internal/proto"
 
 	"google.golang.org/grpc"
@@ -16,6 +17,7 @@ func main() {
 	listener, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("Ошибка при создании слушателя: %v", err)
+
 	}
 
 	grpcServer := grpc.NewServer()

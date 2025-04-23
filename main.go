@@ -14,9 +14,9 @@ import (
 
 func main() {
 	// для рестарта
-	service.SaveUsersCsv([]model.User{{Login: "Alex"}}, "users.csv")
-	service.SaveAlertsCsv([]model.Alert{{Massage: "Попытка взлома"}}, "alerts.csv")
-	service.SaveLogsCsv([]model.Log{{Area: "Антивирус Касперского"}}, "logs.csv")
+	service.RewriteUsersCSV([]model.User{{Login: "Alex"}}, "users.csv")
+	service.RewriteAlertsCSV([]model.Alert{{Massage: "Попытка взлома"}}, "alerts.csv")
+	service.RewriteLogsCSV([]model.Log{{Area: "Антивирус Касперского"}}, "logs.csv")
 
 	// Каналы
 	usersChan := make(chan model.Inter)
