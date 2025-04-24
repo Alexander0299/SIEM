@@ -1,15 +1,18 @@
 package handler
 
 import (
+	"context"
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"siem-sistem/internal/model"
+	pb "siem-sistem/internal/proto"
+	"siem-sistem/internal/service"
 	"strconv"
 	"strings"
-
-	"siem-sistem/internal/model"
 
 	"github.com/gorilla/mux"
 )
@@ -549,4 +552,244 @@ func DeleteLog(w http.ResponseWriter, r *http.Request) {
 	logs = append(logs[:id], logs[id+1:]...)
 	saveLogs(logs)
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// Grpc
+
+type SiemHandler struct {
+	pb.UnimplementedUserServiceServer
+	pb.UnimplementedAlertServiceServer
+	pb.UnimplementedLogServiceServer
+}
+
+// --- USERS ---
+
+func (s *SiemHandler) CreateUser(ctx context.Context, req *pb.User) (*pb.User, error) {
+	id := service.GetNextID("user")
+	user := model.User{
+		ID:    id,
+		Login: req.Login,
+	}
+	err := service.RewriteUsersCSV([]model.User{user}, "users.csv")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.User{Id: int32(id), Login: req.Login}, nil
+}
+
+func (s *SiemHandler) GetUser(ctx context.Context, req *pb.UserID) (*pb.User, error) {
+	users := service.LoadUsersFromCSV("users.csv")
+	for _, user := range users {
+		if int32(user.ID) == req.Id {
+			return &pb.User{Id: int32(user.ID), Login: user.Login}, nil
+		}
+	}
+	return nil, fmt.Errorf("user not found")
+}
+
+func (s *SiemHandler) UpdateUser(ctx context.Context, req *pb.User) (*pb.User, error) {
+	users := service.LoadUsersFromCSV("users.csv")
+
+	updated := false
+	for i := range users {
+		if int32(users[i].ID) == req.Id {
+			users[i].Login = req.Login
+			updated = true
+			break
+		}
+	}
+
+	if !updated {
+		return nil, fmt.Errorf("user with ID %d not found", req.Id)
+	}
+
+	os.Remove("users.csv")
+
+	err := service.RewriteUsersCSV(users, "users.csv")
+	if err != nil {
+		return nil, err
+	}
+	return req, nil
+}
+
+func (s *SiemHandler) DeleteUser(ctx context.Context, req *pb.UserID) (*pb.Empty, error) {
+	users := service.LoadUsersFromCSV("users.csv")
+
+	filtered := []model.User{}
+	for _, user := range users {
+		if int32(user.ID) != req.Id {
+			filtered = append(filtered, user)
+		}
+	}
+
+	os.Remove("users.csv")
+
+	err := service.RewriteUsersCSV(filtered, "users.csv")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Empty{}, nil
+}
+func (s *SiemHandler) ListUsers(ctx context.Context, req *pb.Empty) (*pb.UserList, error) {
+	users := service.LoadUsersFromCSV("users.csv")
+	var pbUsers []*pb.User
+	for _, user := range users {
+		pbUsers = append(pbUsers, &pb.User{Id: int32(user.ID), Login: user.Login})
+	}
+	return &pb.UserList{Users: pbUsers}, nil
+}
+
+// --- ALERTS ---
+
+func (s *SiemHandler) CreateAlert(ctx context.Context, req *pb.Alert) (*pb.Alert, error) {
+	id := service.GetNextID("alert")
+	alert := model.Alert{
+		ID:      id,
+		Massage: req.Message,
+	}
+	err := service.RewriteAlertsCSV([]model.Alert{alert}, "alerts.csv")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Alert{Id: int32(id), Message: req.Message}, nil
+}
+
+func (s *SiemHandler) GetAlert(ctx context.Context, req *pb.AlertID) (*pb.Alert, error) {
+	alerts := service.LoadAlertsFromCSV("alerts.csv")
+	for _, alert := range alerts {
+		if int32(alert.ID) == req.Id {
+			return &pb.Alert{Id: int32(alert.ID), Message: alert.Massage}, nil
+		}
+	}
+	return nil, fmt.Errorf("alert not found")
+}
+
+func (s *SiemHandler) UpdateAlert(ctx context.Context, req *pb.Alert) (*pb.Alert, error) {
+	alerts := service.LoadAlertsFromCSV("alerts.csv")
+
+	updated := false
+	for i := range alerts {
+		if int32(alerts[i].ID) == req.Id {
+			alerts[i].Massage = req.Message
+			updated = true
+			break
+		}
+	}
+
+	if !updated {
+		return nil, fmt.Errorf("alert with ID %d not found", req.Id)
+	}
+
+	os.Remove("alerts.csv")
+
+	err := service.RewriteAlertsCSV(alerts, "alerts.csv")
+	if err != nil {
+		return nil, err
+	}
+	return req, nil
+}
+
+func (s *SiemHandler) DeleteAlert(ctx context.Context, req *pb.AlertID) (*pb.Empty, error) {
+	alerts := service.LoadAlertsFromCSV("alerts.csv")
+
+	filtered := []model.Alert{}
+	for _, alert := range alerts {
+		if int32(alert.ID) != req.Id {
+			filtered = append(filtered, alert)
+		}
+	}
+
+	os.Remove("alerts.csv")
+
+	err := service.RewriteAlertsCSV(filtered, "alerts.csv")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Empty{}, nil
+}
+func (s *SiemHandler) ListAlerts(ctx context.Context, req *pb.Empty) (*pb.AlertList, error) {
+	alerts := service.LoadAlertsFromCSV("alerts.csv")
+	var pbAlerts []*pb.Alert
+	for _, alert := range alerts {
+		pbAlerts = append(pbAlerts, &pb.Alert{Id: int32(alert.ID), Message: alert.Massage})
+	}
+	return &pb.AlertList{Alerts: pbAlerts}, nil
+}
+
+// --- LOGS ---
+
+func (s *SiemHandler) CreateLog(ctx context.Context, req *pb.Log) (*pb.Log, error) {
+	id := service.GetNextID("log")
+	logItem := model.Log{
+		ID:   id,
+		Area: req.Area,
+	}
+	err := service.RewriteLogsCSV([]model.Log{logItem}, "logs.csv")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Log{Id: int32(id), Area: req.Area}, nil
+}
+
+func (s *SiemHandler) GetLog(ctx context.Context, req *pb.LogID) (*pb.Log, error) {
+	logs := service.LoadLogsFromCSV("logs.csv")
+	for _, logItem := range logs {
+		if int32(logItem.ID) == req.Id {
+			return &pb.Log{Id: int32(logItem.ID), Area: logItem.Area}, nil
+		}
+	}
+	return nil, fmt.Errorf("log not found")
+}
+
+func (s *SiemHandler) UpdateLog(ctx context.Context, req *pb.Log) (*pb.Log, error) {
+	logs := service.LoadLogsFromCSV("logs.csv")
+
+	updated := false
+	for i := range logs {
+		if int32(logs[i].ID) == req.Id {
+			logs[i].Area = req.Area
+			updated = true
+			break
+		}
+	}
+
+	if !updated {
+		return nil, fmt.Errorf("log with ID %d not found", req.Id)
+	}
+
+	os.Remove("logs.csv")
+
+	err := service.RewriteLogsCSV(logs, "logs.csv")
+	if err != nil {
+		return nil, err
+	}
+	return req, nil
+}
+
+func (s *SiemHandler) DeleteLog(ctx context.Context, req *pb.LogID) (*pb.Empty, error) {
+	logs := service.LoadLogsFromCSV("logs.csv")
+
+	filtered := []model.Log{}
+	for _, log := range logs {
+		if int32(log.ID) != req.Id {
+			filtered = append(filtered, log)
+		}
+	}
+
+	os.Remove("logs.csv")
+
+	err := service.RewriteLogsCSV(filtered, "logs.csv")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Empty{}, nil
+}
+
+func (s *SiemHandler) ListLogs(ctx context.Context, req *pb.Empty) (*pb.LogList, error) {
+	logs := service.LoadLogsFromCSV("logs.csv")
+	var pbLogs []*pb.Log
+	for _, logItem := range logs {
+		pbLogs = append(pbLogs, &pb.Log{Id: int32(logItem.ID), Area: logItem.Area})
+	}
+	return &pb.LogList{Logs: pbLogs}, nil
 }
