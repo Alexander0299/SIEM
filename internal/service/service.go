@@ -186,6 +186,7 @@ func RewriteAlertsCSV(alerts []model.Alert, filename string) error {
 		return nil
 	})
 }
+
 func RewriteLogsCSV(logs []model.Log, filename string) error {
 	return SaveCsv(filename, []string{"ID", "Источники:"}, func(w *csv.Writer) error {
 		for _, log := range logs {
@@ -199,6 +200,7 @@ func RewriteLogsCSV(logs []model.Log, filename string) error {
 		return nil
 	})
 }
+
 func SaveCsv(filename string, header []string, writeRows func(w *csv.Writer) error) error {
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -217,6 +219,7 @@ func SaveCsv(filename string, header []string, writeRows func(w *csv.Writer) err
 
 	return writeRows(writer)
 }
+
 func LoadUsersFromCSV(filename string) []model.User {
 	var users []model.User
 	file, err := os.Open(filename)
