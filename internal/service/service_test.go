@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/csv"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -35,10 +34,14 @@ func TestGetNextID(t *testing.T) {
 	}
 }
 
+func IdFilePath(entity string) string {
+	panic("unimplemented")
+}
+
 func TestRewriteUsersCSV(t *testing.T) {
 	filename := filepath.Join(t.TempDir(), "test_users.csv")
 	users := []model.User{{ID: 1, Login: "testuser"}}
-	err := RewriteUsersCSV(users, filename)
+	err := RewriteUsers(users, filename)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -51,7 +54,7 @@ func TestRewriteUsersCSV(t *testing.T) {
 func TestRewriteAlertsCSV(t *testing.T) {
 	filename := filepath.Join(t.TempDir(), "test_alerts.csv")
 	alerts := []model.Alert{{ID: 1, Massage: "alert1"}}
-	err := RewriteAlertsCSV(alerts, filename)
+	err := RewriteAlerts(alerts, filename)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -64,7 +67,7 @@ func TestRewriteAlertsCSV(t *testing.T) {
 func TestRewriteLogsCSV(t *testing.T) {
 	filename := filepath.Join(t.TempDir(), "test_logs.csv")
 	logs := []model.Log{{ID: 1, Area: "log1"}}
-	err := RewriteLogsCSV(logs, filename)
+	err := RewriteLogs(logs, filename)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -77,7 +80,7 @@ func TestRewriteLogsCSV(t *testing.T) {
 func TestLoadUsersFromCSV(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "users.csv")
 	os.WriteFile(file, []byte("ID,Пользователи:\n1,testuser\n"), 0644)
-	users := LoadUsersFromCSV(file)
+	users := LoadUsersFrom(file)
 	if len(users) != 1 || users[0].Login != "testuser" {
 		t.Errorf("expected user 'testuser', got: %+v", users)
 	}
@@ -86,7 +89,7 @@ func TestLoadUsersFromCSV(t *testing.T) {
 func TestLoadAlertsFromCSV(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "alerts.csv")
 	os.WriteFile(file, []byte("ID,Уведомления:\n1,alert1\n"), 0644)
-	alerts := LoadAlertsFromCSV(file)
+	alerts := LoadAlertsFrom(file)
 	if len(alerts) != 1 || alerts[0].Massage != "alert1" {
 		t.Errorf("expected alert 'alert1', got: %+v", alerts)
 	}
@@ -95,27 +98,9 @@ func TestLoadAlertsFromCSV(t *testing.T) {
 func TestLoadLogsFromCSV(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "logs.csv")
 	os.WriteFile(file, []byte("ID,Источники:\n1,log1\n"), 0644)
-	logs := LoadLogsFromCSV(file)
+	logs := LoadLogsFrom(file)
 	if len(logs) != 1 || logs[0].Area != "log1" {
 		t.Errorf("expected log 'log1', got: %+v", logs)
-	}
-}
-
-func TestSaveCsv_HeaderWrite(t *testing.T) {
-	filename := filepath.Join(t.TempDir(), "header_test.csv")
-	err := SaveCsv(filename, []string{"A", "B"}, func(w *csv.Writer) error {
-		return w.Write([]string{"1", "2"})
-	})
-	if err != nil {
-		t.Fatalf("SaveCsv failed: %v", err)
-	}
-
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		t.Fatalf("cannot read csv: %v", err)
-	}
-	if !strings.Contains(string(data), "A,B") {
-		t.Errorf("expected header A,B in file, got: %s", string(data))
 	}
 }
 

@@ -570,7 +570,7 @@ func (s *SiemHandler) CreateUser(ctx context.Context, req *pb.User) (*pb.User, e
 		ID:    id,
 		Login: req.Login,
 	}
-	err := service.RewriteUsersCSV([]model.User{user}, "users.csv")
+	err := service.RewriteUsers([]model.User{user}, "users.csv")
 	if err != nil {
 		return nil, err
 	}
@@ -578,7 +578,7 @@ func (s *SiemHandler) CreateUser(ctx context.Context, req *pb.User) (*pb.User, e
 }
 
 func (s *SiemHandler) GetUser(ctx context.Context, req *pb.UserID) (*pb.User, error) {
-	users := service.LoadUsersFromCSV("users.csv")
+	users := service.LoadUsersFrom("users.csv")
 	for _, user := range users {
 		if int32(user.ID) == req.Id {
 			return &pb.User{Id: int32(user.ID), Login: user.Login}, nil
@@ -588,7 +588,7 @@ func (s *SiemHandler) GetUser(ctx context.Context, req *pb.UserID) (*pb.User, er
 }
 
 func (s *SiemHandler) UpdateUser(ctx context.Context, req *pb.User) (*pb.User, error) {
-	users := service.LoadUsersFromCSV("users.csv")
+	users := service.LoadUsersFrom("users.csv")
 
 	updated := false
 	for i := range users {
@@ -605,7 +605,7 @@ func (s *SiemHandler) UpdateUser(ctx context.Context, req *pb.User) (*pb.User, e
 
 	os.Remove("users.csv")
 
-	err := service.RewriteUsersCSV(users, "users.csv")
+	err := service.RewriteUsers(users, "users.csv")
 	if err != nil {
 		return nil, err
 	}
@@ -613,7 +613,7 @@ func (s *SiemHandler) UpdateUser(ctx context.Context, req *pb.User) (*pb.User, e
 }
 
 func (s *SiemHandler) DeleteUser(ctx context.Context, req *pb.UserID) (*pb.Empty, error) {
-	users := service.LoadUsersFromCSV("users.csv")
+	users := service.LoadUsersFrom("users.csv")
 
 	filtered := []model.User{}
 	for _, user := range users {
@@ -624,14 +624,14 @@ func (s *SiemHandler) DeleteUser(ctx context.Context, req *pb.UserID) (*pb.Empty
 
 	os.Remove("users.csv")
 
-	err := service.RewriteUsersCSV(filtered, "users.csv")
+	err := service.RewriteUsers(filtered, "users.csv")
 	if err != nil {
 		return nil, err
 	}
 	return &pb.Empty{}, nil
 }
 func (s *SiemHandler) ListUsers(ctx context.Context, req *pb.Empty) (*pb.UserList, error) {
-	users := service.LoadUsersFromCSV("users.csv")
+	users := service.LoadUsersFrom("users.csv")
 	var pbUsers []*pb.User
 	for _, user := range users {
 		pbUsers = append(pbUsers, &pb.User{Id: int32(user.ID), Login: user.Login})
@@ -647,7 +647,7 @@ func (s *SiemHandler) CreateAlert(ctx context.Context, req *pb.Alert) (*pb.Alert
 		ID:      id,
 		Massage: req.Message,
 	}
-	err := service.RewriteAlertsCSV([]model.Alert{alert}, "alerts.csv")
+	err := service.RewriteAlerts([]model.Alert{alert}, "alerts.csv")
 	if err != nil {
 		return nil, err
 	}
@@ -655,7 +655,7 @@ func (s *SiemHandler) CreateAlert(ctx context.Context, req *pb.Alert) (*pb.Alert
 }
 
 func (s *SiemHandler) GetAlert(ctx context.Context, req *pb.AlertID) (*pb.Alert, error) {
-	alerts := service.LoadAlertsFromCSV("alerts.csv")
+	alerts := service.LoadAlertsFrom("alerts.csv")
 	for _, alert := range alerts {
 		if int32(alert.ID) == req.Id {
 			return &pb.Alert{Id: int32(alert.ID), Message: alert.Massage}, nil
@@ -665,7 +665,7 @@ func (s *SiemHandler) GetAlert(ctx context.Context, req *pb.AlertID) (*pb.Alert,
 }
 
 func (s *SiemHandler) UpdateAlert(ctx context.Context, req *pb.Alert) (*pb.Alert, error) {
-	alerts := service.LoadAlertsFromCSV("alerts.csv")
+	alerts := service.LoadAlertsFrom("alerts.csv")
 
 	updated := false
 	for i := range alerts {
@@ -682,7 +682,7 @@ func (s *SiemHandler) UpdateAlert(ctx context.Context, req *pb.Alert) (*pb.Alert
 
 	os.Remove("alerts.csv")
 
-	err := service.RewriteAlertsCSV(alerts, "alerts.csv")
+	err := service.RewriteAlerts(alerts, "alerts.csv")
 	if err != nil {
 		return nil, err
 	}
@@ -690,7 +690,7 @@ func (s *SiemHandler) UpdateAlert(ctx context.Context, req *pb.Alert) (*pb.Alert
 }
 
 func (s *SiemHandler) DeleteAlert(ctx context.Context, req *pb.AlertID) (*pb.Empty, error) {
-	alerts := service.LoadAlertsFromCSV("alerts.csv")
+	alerts := service.LoadAlertsFrom("alerts.csv")
 
 	filtered := []model.Alert{}
 	for _, alert := range alerts {
@@ -701,14 +701,14 @@ func (s *SiemHandler) DeleteAlert(ctx context.Context, req *pb.AlertID) (*pb.Emp
 
 	os.Remove("alerts.csv")
 
-	err := service.RewriteAlertsCSV(filtered, "alerts.csv")
+	err := service.RewriteAlerts(filtered, "alerts.csv")
 	if err != nil {
 		return nil, err
 	}
 	return &pb.Empty{}, nil
 }
 func (s *SiemHandler) ListAlerts(ctx context.Context, req *pb.Empty) (*pb.AlertList, error) {
-	alerts := service.LoadAlertsFromCSV("alerts.csv")
+	alerts := service.LoadAlertsFrom("alerts.csv")
 	var pbAlerts []*pb.Alert
 	for _, alert := range alerts {
 		pbAlerts = append(pbAlerts, &pb.Alert{Id: int32(alert.ID), Message: alert.Massage})
@@ -724,7 +724,7 @@ func (s *SiemHandler) CreateLog(ctx context.Context, req *pb.Log) (*pb.Log, erro
 		ID:   id,
 		Area: req.Area,
 	}
-	err := service.RewriteLogsCSV([]model.Log{logItem}, "logs.csv")
+	err := service.RewriteLogs([]model.Log{logItem}, "logs.csv")
 	if err != nil {
 		return nil, err
 	}
@@ -732,7 +732,7 @@ func (s *SiemHandler) CreateLog(ctx context.Context, req *pb.Log) (*pb.Log, erro
 }
 
 func (s *SiemHandler) GetLog(ctx context.Context, req *pb.LogID) (*pb.Log, error) {
-	logs := service.LoadLogsFromCSV("logs.csv")
+	logs := service.LoadLogsFrom("logs.csv")
 	for _, logItem := range logs {
 		if int32(logItem.ID) == req.Id {
 			return &pb.Log{Id: int32(logItem.ID), Area: logItem.Area}, nil
@@ -742,7 +742,7 @@ func (s *SiemHandler) GetLog(ctx context.Context, req *pb.LogID) (*pb.Log, error
 }
 
 func (s *SiemHandler) UpdateLog(ctx context.Context, req *pb.Log) (*pb.Log, error) {
-	logs := service.LoadLogsFromCSV("logs.csv")
+	logs := service.LoadLogsFrom("logs.csv")
 
 	updated := false
 	for i := range logs {
@@ -759,7 +759,7 @@ func (s *SiemHandler) UpdateLog(ctx context.Context, req *pb.Log) (*pb.Log, erro
 
 	os.Remove("logs.csv")
 
-	err := service.RewriteLogsCSV(logs, "logs.csv")
+	err := service.RewriteLogs(logs, "logs.csv")
 	if err != nil {
 		return nil, err
 	}
@@ -767,7 +767,7 @@ func (s *SiemHandler) UpdateLog(ctx context.Context, req *pb.Log) (*pb.Log, erro
 }
 
 func (s *SiemHandler) DeleteLog(ctx context.Context, req *pb.LogID) (*pb.Empty, error) {
-	logs := service.LoadLogsFromCSV("logs.csv")
+	logs := service.LoadLogsFrom("logs.csv")
 
 	filtered := []model.Log{}
 	for _, log := range logs {
@@ -778,7 +778,7 @@ func (s *SiemHandler) DeleteLog(ctx context.Context, req *pb.LogID) (*pb.Empty, 
 
 	os.Remove("logs.csv")
 
-	err := service.RewriteLogsCSV(filtered, "logs.csv")
+	err := service.RewriteLogs(filtered, "logs.csv")
 	if err != nil {
 		return nil, err
 	}
@@ -786,7 +786,7 @@ func (s *SiemHandler) DeleteLog(ctx context.Context, req *pb.LogID) (*pb.Empty, 
 }
 
 func (s *SiemHandler) ListLogs(ctx context.Context, req *pb.Empty) (*pb.LogList, error) {
-	logs := service.LoadLogsFromCSV("logs.csv")
+	logs := service.LoadLogsFrom("logs.csv")
 	var pbLogs []*pb.Log
 	for _, logItem := range logs {
 		pbLogs = append(pbLogs, &pb.Log{Id: int32(logItem.ID), Area: logItem.Area})
