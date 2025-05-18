@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: siem-app
+    ports:
+      - "8080:8080"  # Если у тебя HTTP сервер (иначе можно убрать)
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - siem-net
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+      - REDIS_ADDR=redis:6379
+      
+
+  mongo:
+    image: mongo:4.4.7
+    container_name: siem-mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - siem-net
+
+  redis:
+    image: redis:7.2
+    container_name: siem-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - siem-net
+
+networks:
+  siem-net:
